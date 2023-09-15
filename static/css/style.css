@@ -1,10 +1,20 @@
 :root {
     --light-gray: #e6e6e6;
     --mid-gray: #586273;
+    --mbgc: rgba(27,59,139,1);
+    --sbgc: rgba(21,37,85, 1);
 }
 
 html, body, .t-b {
     height: 100%;
+}
+
+.btn {
+    background-color: white;
+}
+
+.btn:focus {
+    box-shadow: none !important;
 }
 
 .my-search-form {
@@ -39,7 +49,7 @@ html, body, .t-b {
 
 .mt-profile {
     margin-top: 6rem!important;
-    }
+}
 
 .w-45 {
     width: 45%!important;
@@ -78,10 +88,12 @@ html, body, .t-b {
 }
 
 .toggler-active {
-    background-color: var(--bs-secondary)!important;
     color: white!important;
     font-weight: normal!important;
     cursor: default;
+    font-size: 16px;
+    transition: all 1s ease-out;
+    background-color: var(--mbgc)!important;
 }
 
 .search-text::placeholder {
@@ -89,5 +101,44 @@ html, body, .t-b {
 }
 
 .search-text {
+    color: white!important;
+}
+
+.active-circle {
+    background-color: var(--mbgc)!important;
+    outline: white solid .3em!important;
+    outline-offset: -.7em;
+    box-shadow: none !important;
+}
+
+.circle {
+    background-color: var(--mbgc)!important;
+    border: none;
+    box-shadow: none !important;
+}
+
+::-webkit-scrollbar {
+    width: .6rem;
+    border-radius: 1rem;
+}
+
+#resources_window::-webkit-scrollbar-track {
+  width: 1rem;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #adb5bd;
+    /*background-clip: padding-box;*/
+    border-radius: 1rem;
+}
+
+.mbgc {
+    background-color: var(--mbgc)!important;
+    color: white!important;
+    transition: color .3s ease-out;
+}
+
+button.mbgc:hover, a.mbgc:hover {
+    background-color: var(--sbgc)!important;
     color: white!important;
 }

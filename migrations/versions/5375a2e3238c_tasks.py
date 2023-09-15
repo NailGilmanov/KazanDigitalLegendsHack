@@ -1,3 +1,10 @@
+"""tasks
+
+Revision ID: 5375a2e3238c
+Revises: 7c109e020a2a
+Create Date: 2022-04-16 19:12:39.567108
+
+"""
 from alembic import op
 import sqlalchemy as sa
 

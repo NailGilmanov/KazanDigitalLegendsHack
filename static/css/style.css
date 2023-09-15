@@ -15,8 +15,30 @@ html, body, .t-b {
     line-height: normal;
 }
 
+.tooltip-inner {
+    max-width: 400px!important;
+    background-color: rgb(230, 230, 230)!important;
+    color: rgb(30, 30, 30)!important;
+    text-align: left!important;
+}
+
+.tooltip-arrow::before {
+    border-right-color: rgb(230, 230, 230)!important;
+    border-left-color: rgb(230, 230, 230)!important;
+}
+
+.tags-docs-text {
+    font-size: 20px;
+    font-weight: 400;
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
 .btn:focus {
     box-shadow: none !important;
+}
+
+.published_check:checked {
+    background-color: var(--mbgc)!important;
 }
 
 .my-search-form {
@@ -41,6 +63,10 @@ html, body, .t-b {
     width: 62.5%!important;
 }
 
+.w-33 {
+    width: 33.3% !important;
+}
+
 .no-image {
     background-image: none!important;
 }
@@ -57,9 +83,24 @@ html, body, .t-b {
     width: 45%!important;
 }
 
+.my-w-75 {
+    width: 75%;
+}
+
 .w-profile {
         width: 50%;
-    }
+}
+
+.profile-button:hover {
+    color: white!important;
+    background: var(--mbgc)!important;
+}
+
+.profile-button {
+    color: black!important;
+    border: solid 1px var(--mbgc)!important;
+    transition: 0.5s!important;
+}
 
 @media (max-width: 992px) {
     /* profile */
@@ -90,13 +131,19 @@ html, body, .t-b {
     }
 }
 @media (max-width: 769px) {
-    .sm-fullsize {
+    .md-fullsize {
         width: 100%!important;
+    }
+    .md-column {
+        flex-direction: column;
     }
 }
 @media (max-width: 577px) {
     .sm-column {
         flex-direction: column;
+    }
+    .sm-fullsize {
+        width: 100%!important;
     }
 }
 .no-focus:focus {
@@ -192,4 +239,16 @@ button.mbgc:hover, a.mbgc:hover {
     background-color: var(--sbgc)!important;
     color: white!important;
 }
-/*27, 59, 193*/
+
+input[type='checkbox']:checked {
+    background-color: var(--mbgc);
+}
+
+.liked {
+    color: #dc3545;
+}
+
+.unliked {
+    color: #6c757d;
+}
+

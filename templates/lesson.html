@@ -10,7 +10,7 @@
           {% for i in contents %}
             <button id="c{{ loop.index }}"
                     class="rounded-circle btn my-2 d-block c {% if loop.index == 1 %}active-circle{% else %}circle{% endif %}"
-                    type="button"></button>
+                    type="button" style="background-color: {{ circle_colors[loop.index0] }}!important"></button>
           {% endfor %}
         </div>
       </div>
@@ -20,14 +20,23 @@
                 style="background-color: var(--xlight-gray); border: #e6e6e6 0.1rem solid; width: 60%; overflow-wrap: break-word;">{{ course.name }} / {{ lesson.name }}</span>
         </div>
         <div class="row mt-5 flex-grow-1">
-          {% for c in contents %}
             <div class="col-12">
-              <div id="ta{{ loop.index }}"
-                   class="h-100 d-block ta {% if not loop.first %}d-none{% endif %} rounded p-3"
-                   style="min-height: 20rem; background-color: var(--xlight-gray); border: #e6e6e6 0.1rem solid">{{ c|safe }}</div>
+              {% for c in contents %}
+                <div id="ta{{ loop.index }}"
+                    class="d-block ta {% if not loop.first %}d-none{% endif %} rounded p-3"
+                    style="background-color: var(--xlight-gray); border: #e6e6e6 0.1rem solid">{{ c|safe }}
+                    {% if draw_hw[loop.index0] %}
+                      <br><label class="h4 mt-5">Домашнее задание</label>
+                      <input type="file" name="hw{{ loop.index0 }}" style="width: 25%" class="form-control">
+                    {% endif %}
+                </div>
+              {% endfor %}
+              {% if show_hw %}
+                <button class="mbgc btn mt-3 float-end" type="submit">Сохранить домашнее задание</button>
+              {% endif %}
             </div>
-          {% endfor %}
         </div>
+
       </div>
     </div>
   </form>

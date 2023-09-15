@@ -40,5 +40,27 @@ class CourseDescForm(FlaskForm):
     submit = SubmitField("Сохранить")
 
 
-class SearchForm:
-    pass
+class SearchForm(FlaskForm):
+    req = StringField('Введите запрос')
+    submit = SubmitField('Поиск')
+
+
+class EditPassword(FlaskForm):
+    old_password = PasswordField('Старый пароль', validators=[DataRequired()])
+
+    password1 = PasswordField('Новый пароль', validators=[DataRequired(), EqualTo('password2', message='Пароли не совпадают')])
+    password2 = PasswordField(
+        'Повторите пароль', validators=[DataRequired(), EqualTo('password1', message='Пароли не совпадают')])
+
+    submit = SubmitField('Изменить')
+
+
+class EditMainInfo(FlaskForm):
+    username = StringField('Имя пользователя', validators=[DataRequired()])
+    email = StringField('Электронная почта', validators=[DataRequired(), Email()])
+    submit = SubmitField('Сохранить')
+
+
+class EditAvatar(FlaskForm):
+    avatar = FileField("Выберите новый аватар")
+    submit = SubmitField("Сохранить")

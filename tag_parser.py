@@ -89,6 +89,9 @@ def process_link_tags(string: str) -> str:
 
         url = result[url_entry + 5:url_out]
         tag_out = find_pattern(result, "]", url_out)
+        if tag_out == -1:
+            raise ParseError(
+                f"Unclosed link tag! url={url}")
         tag_length = tag_out - link_entry + 1
 
         result = replace_string(result, f'<a href="{url}">{link_name}</a>', link_entry, tag_length)
@@ -116,9 +119,34 @@ def process_img_tags(string: str, replaces: dict) -> str:
         tag_out = find_pattern(result, "]", img_name_entry)
         tag_length = tag_out - img_entry + 1
         # do name to url converting here
-        result = replace_string(result, f'<img src="{replaces[img_name]}"', img_entry, tag_length)
+        result = replace_string(result, f'<img src="{replaces[img_name]}" style="max-width: 75%; box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, .05);">', img_entry, tag_length)
 
         img_entry = find_pattern(result, "[IMG name=")
+
+    return result
+
+
+def process_video_tags(string: str, replaces) -> str:
+    original_string = string
+    result = string
+
+    img_entry = find_pattern(result, "[VIDEO name=")
+    while img_entry != -1:
+        img_name_entry = img_entry + 13
+        img_name_entry_char = result[img_name_entry - 1]
+        img_name_out = find_pattern(result, img_name_entry_char, img_name_entry)
+
+        if img_name_out == -1:
+            raise ParseError(
+                f"Unclosed link name starts with{result[img_name_entry:min(img_name_entry + 10, len(result))]}!")
+
+        img_name = result[img_name_entry:img_name_out]
+        tag_out = find_pattern(result, "]", img_name_entry)
+        tag_length = tag_out - img_entry + 1
+        # do name to url converting here
+        result = replace_string(result, f'<video src="{replaces[img_name]}" style="width: 50%" controls></video>', img_entry, tag_length)
+
+        img_entry = find_pattern(result, "[VIDEO name=")
 
     return result
 
@@ -155,14 +183,20 @@ def process_hr_tags(string: str) -> str:
     return result
 
 
-def parse(string, replaces):
-    result = process_in_out_tag(string, "[H]", "[/H]", "<h1>", "</h1>")
+def parse(string: str, replaces, ignore_img=False):
+    result = string
+    result = result.replace("<", "&lt;")
+    result = result.replace(">", "&gt;")
+    result = process_in_out_tag(result, "[H]", "[/H]", "<h1>", "</h1>")
     result = process_in_out_tag(result, "[I]", "[/I]", "<i>", "</i>")
-    result = process_in_out_tag(result, "[CODE]", "[/CODE]", '<div style="background-color: #f5f5f5; border: 1px solid #d5d5d5; border-radius: 3px; line-height: normal;" class="px-3 py-1 my-3 w-50"><code>', "</code></div>")
+    result = process_in_out_tag(result, "[CODE]", "[/CODE]", '<div style="background-color: #f5f5f5; border: 1px solid #d5d5d5; border-radius: 3px; line-height: normal; box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, .05);" class="px-3 py-1 my-3 w-50"><code>', "</code></div>")
+    result = process_in_out_tag(result, "[ICODE]", "[/ICODE]", "<span style='font-family: monospace'>", "</span>")
     result = process_in_out_tag(result, "[B]", "[/B]", "<b>", "</b>")
     result = process_hr_tags(result)
     result = process_link_tags(result)
-    result = process_img_tags(result, replaces)
+    if not ignore_img:
+        result = process_img_tags(result, replaces)
+        result = process_video_tags(result, replaces)
     result = process_color_tags(result)
     result = result.replace('\n', '<br>')
 

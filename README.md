@@ -1,2 +1,2 @@
-# KazanDigitalLegendsHack
-flask project for hackaton in kazan
+# PracticeHub
+pip install -r requirements.txt

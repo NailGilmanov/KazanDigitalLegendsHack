@@ -10,7 +10,7 @@ from werkzeug.utils import secure_filename
 import tag_parser
 from app import app, db
 from forms import LoginForm, RegistrationForm, CourseDescForm
-from models import User, load_user, Course, Lesson, Page, LessonFile, TaskCheck
+from models import User, load_user, Course, Lesson, Page, LessonFile
 from utils import allowed_file
 
 
@@ -85,14 +85,7 @@ def news():
 @login_required
 def teaching():
     courses = Course.query.filter_by(author_id=current_user.id).all()
-    checks = []
-    task_checks = TaskCheck.query.all()
-
-    for task in task_checks:
-        if task.page.lesson.course.author_id == current_user.id:
-            checks.append(task)
-
-    return render_template('teaching.html', courses=courses, checks=checks)
+    return render_template('teaching.html', courses=courses)
 
 
 @app.route('/courses/create', methods=['GET', 'POST'])
@@ -212,3 +205,18 @@ def lesson(course_id, lesson_id):
     for p in les.pages:
         contents.append(tag_parser.parse(p.text, img_convert))
     return render_template('lesson.html', lesson=les, contents=contents, course=les.course)
+
+
+@app.route('/test/<int:id>', methods=['GET', 'POST'])
+@login_required
+def test_profile(id):
+    user = User.query.filter(User.id == id).first()
+    created_courses = Course.query.filter_by(author_id=user.id).all()
+
+    can_edit = False
+    if current_user.is_authenticated and user.id == current_user.id:
+        can_edit = True
+
+    return render_template('test_profile.html', user=user, courses=created_courses, can_edit=can_edit)
+
+

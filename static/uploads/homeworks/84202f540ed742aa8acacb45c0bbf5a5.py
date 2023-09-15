@@ -89,22 +89,16 @@ def news():
     return render_template('news.html')
 
 
-@app.route('/teaching', methods=['GET', 'POST'])
+@app.route('/teaching', methods=['GET'])
 @login_required
 def teaching():
     courses = Course.query.filter_by(author_id=current_user.id).all()
     checks = []
-    task_checks = TaskCheck.query.filter(TaskCheck.status.is_(None)).all()
+    task_checks = TaskCheck.query.all()
+
     for task in task_checks:
         if task.page.lesson.course.author_id == current_user.id:
             checks.append(task)
-    if request.method == 'POST':
-        data = request.form
-        task_check = checks[int(data['index'])]
-        task_check.status = 1 if int(data['choice']) else 0
-        db.session.add(task_check)
-        db.session.commit()
-        return 'ok'
 
     return render_template('teaching.html', courses=courses, checks=checks)
 
@@ -279,6 +273,37 @@ def test_profile(id):
     return render_template('test_profile.html', user=user, courses=created_courses, can_edit=can_edit)
 
 
+@app.route("/api")
+def api():
+    current_api = [
+        {"title": "/api/get_username", "desc": "Used for getting user name", "params": [("id", "user id")],
+         "return": ("name", "user name"), "ex": "https://practicehub.org/api/get_username?id=1"},
+        {"title": "/api/get_course_icon", "desc": "Used for getting course icon (avatar) by id", "params": [("id", "course id")],
+         "return": ("img", "course icon"), "ex": "https://practicehub.org/api/get_course_icon?id=1"},
+        {"title": "/api/get_course_name", "desc": "Used for getting course name by id",
+         "params": [("id", "course id")],
+         "return": ("name", "course name"), "ex": "https://practicehub.org/api/get_course_name?id=1"},
+        {"title": "/api/get_course_id", "desc": "Used for getting course id by name",
+         "params": [("name", "course name")],
+         "return": ("id", "course id"), "ex": "https://practicehub.org/api/get_course_id?name=Mega%20python"}
+    ]
+
+    return render_template("api.html", apis=current_api)
+
+
+@app.route("/api/get_username")
+def get_name():
+    account_id = request.args["id"]
+    user = User.query.filter(User.id == account_id).first()
+    return user.username
+
+
+@app.route("/api/get_course_icon")
+def get_course_icon():
+    course_id = request.args["id"]
+    course = Course.query.filter_by(id=course_id).first()
+    return send_file(course.img_path)
+
 @app.route('/search', methods=['GET', 'POST'])
 def search():
     form = SearchForm()
@@ -319,6 +344,22 @@ def search():
     print(courses)
     return render_template('search.html', courses=courses, form=form, tags=filter_tags,
                            active_tags=tags)
+
+
+@app.route("/api/get_course_name")
+def get_course_name():
+    course_id = request.args["id"]
+    course = Course.query.filter_by(id=course_id).first()
+    return course.name
+
+
+@app.route("/api/get_course_id")
+def get_course_id():
+    course_name = request.args["name"]
+    course = Course.query.filter_by(name=course_name).first()
+    if not course:
+        abort(404)
+    return course.id
 
 
 @app.errorhandler(HTTPException)

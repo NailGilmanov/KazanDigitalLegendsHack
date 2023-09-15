@@ -1,16 +1,19 @@
 import os
 from os.path import join
-from flask import render_template, redirect, url_for, flash, request, send_file, escape
+from flask import render_template, redirect, url_for, flash, request, send_file, escape, abort, \
+    make_response
 from werkzeug.urls import url_parse
 from flask_login import current_user, login_user, logout_user, login_required
 from uuid import uuid4
+import pymorphy3
 
 from werkzeug.utils import secure_filename
+from werkzeug.exceptions import HTTPException
 
 import tag_parser
 from app import app, db
-from forms import LoginForm, RegistrationForm, CourseDescForm
-from models import User, load_user, Course, Lesson, Page, LessonFile
+from forms import LoginForm, RegistrationForm, CourseDescForm, SearchForm
+from models import User, load_user, Course, Lesson, Page, LessonFile, TaskCheck, Tag, CoursesTags
 from utils import allowed_file
 
 
@@ -19,6 +22,11 @@ from utils import allowed_file
 def index():
     courses = Course.query.limit(10).all()  # TODO: add order by likes(?..)
     return render_template('index.html', courses=courses)
+
+
+@app.route('/favicon.ico', methods=['GET', 'POST'])
+def favicon():
+    return get_file('static/images/favicon.ico')
 
 
 @app.route('/<string:path>')
@@ -85,7 +93,14 @@ def news():
 @login_required
 def teaching():
     courses = Course.query.filter_by(author_id=current_user.id).all()
-    return render_template('teaching.html', courses=courses)
+    checks = []
+    task_checks = TaskCheck.query.all()
+
+    for task in task_checks:
+        if task.page.lesson.course.author_id == current_user.id:
+            checks.append(task)
+
+    return render_template('teaching.html', courses=courses, checks=checks)
 
 
 @app.route('/courses/create', methods=['GET', 'POST'])
@@ -110,9 +125,21 @@ def create_course():
 @app.route('/courses/<int:course_id>', methods=['GET', 'POST'])
 @login_required
 def course(course_id):
-
     course = Course.query.filter_by(id=course_id).first_or_404()
-    return render_template('course.html', course=course)
+    if request.method == 'POST':
+        course.users.append(current_user)
+        db.session.add(course)
+        db.session.commit()
+        print(course.users)
+        flash('Вы успешно поступили на курс', 'success')
+        return redirect(url_for('lessons', course_id=course_id))
+    started = True if current_user in course.users else False
+    resp = make_response(render_template('course.html', course=course, started=started))
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    resp.headers['Cache-Control'] = 'public, max-age=0'
+    return resp
 
 
 @app.route('/courses/<int:course_id>/edit', methods=['GET', 'POST'])
@@ -143,9 +170,9 @@ def lessons(course_id):
     lessons = Lesson.query.filter_by(course_id=course.id).all()
 
     if User.query.filter_by(username=current_user.username).first().id == course.author_id:
-        return render_template('lessons.html', course=course, lessons=lessons)
+        return render_template('lessons.html', course=course, lessons=lessons, teacher=True)
     else:
-        return 'страница уроков для ученика'
+        return render_template('lessons.html', course=course, lessons=lessons)
 
 
 @app.route('/courses/<int:course_id>/lessons/create', methods=['GET', 'POST'])
@@ -182,12 +209,16 @@ def create_lesson(course_id):
             lesson_file = LessonFile(path=path, uuid=_uuid, name=user_filename, lesson=lesson)
             db.session.add(lesson_file)
         # pages
+        pages = []
         for k, v in data.items():
-            if not k.startswith('ta'):
-                continue
-            text = v
-            page = Page(text=text, lesson=lesson)
-            db.session.add(page)
+            if k.startswith('ta'):
+                text = v
+                page = Page(text=text, lesson=lesson)
+                pages.append(page)
+            if k.startswith('ch'):
+                page = pages[int(k[2:]) - 1]
+                page.add_task = True if v == 'on' else False
+                db.session.add(page)
         db.session.commit()
         return redirect(url_for('lessons', course_id=course_id))
     # get
@@ -220,3 +251,95 @@ def test_profile(id):
     return render_template('test_profile.html', user=user, courses=created_courses, can_edit=can_edit)
 
 
+@app.route("/api")
+def api():
+    current_api = [
+        {"title": "/api/get_username", "desc": "Used for getting user name", "params": [("id", "user id")],
+         "return": ("name", "user name"), "ex": "https://practicehub.org/api/get_username?id=1"},
+        {"title": "/api/get_course_icon", "desc": "Used for getting course icon (avatar) by id", "params": [("id", "course id")],
+         "return": ("img", "course icon"), "ex": "https://practicehub.org/api/get_course_icon?id=1"},
+        {"title": "/api/get_course_name", "desc": "Used for getting course name by id",
+         "params": [("id", "course id")],
+         "return": ("name", "course name"), "ex": "https://practicehub.org/api/get_course_name?id=1"},
+        {"title": "/api/get_course_id", "desc": "Used for getting course id by name",
+         "params": [("name", "course name")],
+         "return": ("id", "course id"), "ex": "https://practicehub.org/api/get_course_id?name=Mega%20python"}
+    ]
+
+    return render_template("api.html", apis=current_api)
+
+
+@app.route("/api/get_username")
+def get_name():
+    account_id = request.args["id"]
+    user = User.query.filter(User.id == account_id).first()
+    return user.username
+
+
+@app.route("/api/get_course_icon")
+def get_course_icon():
+    course_id = request.args["id"]
+    course = Course.query.filter_by(id=course_id).first()
+    return send_file(course.img_path)
+
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+    form = SearchForm()
+    tags = [key for key, value in request.form.items() if value == 'on']
+
+    if form.validate_on_submit() and form.req.data:
+        req = form.req.data
+
+        morph = pymorphy3.MorphAnalyzer()
+        normal = morph.normal_forms(req)[0]
+        courses = Course.query.filter(Course.desc.contains(req) | Course.short_desc.contains(req) |
+                                      Course.desc.contains(normal) | Course.short_desc.contains(normal)
+                                      ).filter(Course.is_published == True)
+        # reqq = """courses = Course.query.filter(Course.desc.contains(req) | Course.short_desc.contains(req) |
+        #                               Course.desc.contains(normal) | Course.short_desc.contains(normal)
+        #                               ).filter(Course.is_published == True)"""
+
+    else:
+        courses = Course.query.filter(Course.is_published == True)
+        # reqq = 'courses = Course.query.filter(Course.is_published == True)'
+
+    if tags:
+        courses = courses.filter().all()
+        # cc = "".join([f".filter(Course.tags.contains('{t}'))" for t in tags]) + '.all()'
+        # exec(f'courses = courses{"".join([f".filter({t} in Course.tags)" for t in tags])}.all()')
+        # reqq += cc
+        # print(reqq)
+        # exec(reqq)
+        # exec(f'courses = courses{cc}.all()')
+        # courses = courses.filter().all()
+
+        print([tt.tag for tt in courses[0].tags])
+    else:
+        courses = Course.query.all()
+
+    filter_tags = [t.tag for t in Tag.query.all()]
+    # print([[j.tag for j in i.tags] for i in courses])
+    print(courses)
+    return render_template('search.html', courses=courses, form=form, tags=filter_tags,
+                           active_tags=tags)
+
+
+@app.route("/api/get_course_name")
+def get_course_name():
+    course_id = request.args["id"]
+    course = Course.query.filter_by(id=course_id).first()
+    return course.name
+
+
+@app.route("/api/get_course_id")
+def get_course_id():
+    course_name = request.args["name"]
+    course = Course.query.filter_by(name=course_name).first()
+    if not course:
+        abort(404)
+    return course.id
+
+
+@app.errorhandler(HTTPException)
+def handle_exception(e):
+    return render_template("error.html", errorname=e.name, cat_img=f"https://http.cat/{e.code}")

@@ -1,7 +1,7 @@
 from sqlalchemy import func, select
 from sqlalchemy.orm import column_property
 
-from app import db, login
+from main import db, login
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import datetime

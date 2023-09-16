@@ -29,8 +29,8 @@
         <a class="" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false"
            role="button">
           <img
-              src="https://media-exp1.licdn.com/dms/image/C560BAQHMnA03XDdf3w/company-logo_200_200/0/1519855918965?e=2159024400&v=beta&t=CrP5Le1mWICRcaxIGNBuajHcHGFPuyNA5C8DI339lSk"
-              alt="пусто" height="40" width="40">
+              src='{{ url_for("get_file", path=current_user.img_path) if current_user.img_path else url_for("get_file", path="static/images/default_avatar.jpg") }}'
+              alt="пусто" height="40" width="40" style="border-radius: 3px;">
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
           <li><a class="dropdown-item"
@@ -96,14 +96,13 @@
       <a href="/" class="me-2 mb-md-0 text-muted text-decoration-none lh-1">
         <svg class="bi" width="30" height="24"><use xlink:href="#bootstrap"></use></svg>
       </a>
-      <span style="color: rgb(160, 160, 160)">© PracticeHub by Хакатон 2023</span>
+      <span style="color: rgb(160, 160, 160)">© Practice Hub by Хакатон 2023</span>
     </div>
 
     <div class="col-md-6 pe-5">
       <div class="float-end md-fullsize d-flex justify-content-between" style="width: 65%">
         <div class="me-4">
-          <a style="color: rgb(50, 50, 50)">Контакты</a><br>
-          <a style="color: rgb(50, 50, 50)">О проекте</a>
+          <a href="https://t.me/+GFPA-ZvZ4Nc2MjEy" style="color: rgb(50, 50, 50)">Контакты</a><br>
         </div>
         <div>
           <a href='{{ url_for("tags") }}' style="color: rgb(50, 50, 50); text-decoration: none">Документация по тегам</a><br>

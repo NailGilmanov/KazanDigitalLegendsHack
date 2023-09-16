@@ -1,7 +1,11 @@
+from sqlalchemy import func, select
+from sqlalchemy.orm import column_property
+
 from app import db, login
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import datetime
+from sqlalchemy.ext.associationproxy import association_proxy
 
 
 @login.user_loader
@@ -9,11 +13,14 @@ def load_user(id):
     return User.query.get(int(id))
 
 
-my_courses = db.Table('my_courses',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-    db.Column('course_id', db.Integer, db.ForeignKey('course.id'), primary_key=True),
-    db.Column('completed', db.Boolean),
-)
+class MyCourses(db.Model):
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    course_id = db.Column(db.Integer, db.ForeignKey('course.id'), primary_key=True)
+    liked = db.Column(db.Boolean, default=False)
+
+    def __init__(self, course=None, user=None):
+        self.course = course
+        self.user = user
 
 
 class User(UserMixin, db.Model):
@@ -23,11 +30,12 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(128))
     created_courses = db.relationship('Course', backref='author', lazy='dynamic')
     created_posts = db.relationship('Post', backref='author', lazy='dynamic')
-    my_courses = db.relationship('Course', secondary=my_courses, lazy='dynamic', backref=db.backref('users'))
+
     img_path = db.Column(db.String(64))
     img_uuid = db.Column(db.String(64), index=True)
 
     task_check = db.relationship("TaskCheck", backref="user")
+
     # TODO: date created
 
     def set_password(self, password):
@@ -40,38 +48,24 @@ class User(UserMixin, db.Model):
         return f'<User {self.username}>'
 
 
-class Tag(db.Model):
-    id = db.Column(db.Integer, primary_key=True, unique=True)
-    tag = db.Column(db.String)
-
-    def __repr__(self):
-        return f'{self.tag}'
-
-
-class CoursesTags(db.Model):
-    id = db.Column(db.Integer, primary_key=True, unique=True)
-    course_id = db.Column(db.Integer, db.ForeignKey('course.id'))
-    tag_id = db.Column(db.Integer, db.ForeignKey('tag.id'))
-
-
 class Course(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    lessons = db.relationship('Lesson', backref='course', lazy='dynamic', cascade="all, delete-orphan")
+    lessons = db.relationship('Lesson', backref='course', lazy='select',
+                              cascade="all, delete-orphan")
     desc = db.Column(db.Text, nullable=False)
-    rating = db.Column(db.Integer, default=0)
 
     short_desc = db.Column(db.Text, nullable=False)
     img_path = db.Column(db.String(64))
     img_uuid = db.Column(db.String(64), index=True)
 
     is_published = db.Column(db.Boolean, default=False)
+    users = db.relationship('User', secondary=MyCourses.__table__, backref='course')
 
-    tags = db.relationship('Tag', secondary=CoursesTags.__table__, backref='course')
+    likes = column_property(select(func.count(MyCourses.liked)).where(MyCourses.course_id == id).scalar_subquery())
 
     # author
-    # users
 
     def __repr__(self):
         return f'<Course {self.name} by {self.author.username}>'
@@ -81,8 +75,10 @@ class Lesson(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
     course_id = db.Column(db.Integer, db.ForeignKey('course.id'))
-    pages = db.relationship('Page', backref='lesson', lazy='dynamic', cascade="all, delete-orphan")
-    files = db.relationship('LessonFile', backref='lesson', lazy='dynamic', cascade="all, delete-orphan")
+    pages = db.relationship('Page', backref='lesson', lazy='select', cascade="all, delete-orphan")
+    files = db.relationship('LessonFile', backref='lesson', lazy='dynamic',
+                            cascade="all, delete-orphan")
+
     # course
 
     def __repr__(self):
@@ -107,6 +103,7 @@ class Post(db.Model):
     name = db.Column(db.String(64))
     text = db.Column(db.Text)
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
     # author
 
     def __repr__(self):
@@ -137,4 +134,3 @@ class TaskCheck(db.Model):
 
     def __repr__(self):
         return f"<TaskCheck {self.id} page {self.page_id}>"
-

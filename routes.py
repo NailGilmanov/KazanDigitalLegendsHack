@@ -89,11 +89,27 @@ def register():
 def profile(id):
     user = User.query.filter_by(id=id).first()
 
-    courses = len(Course.query.filter_by(author_id=id).all())
+    course_count = len(Course.query.filter_by(author_id=id).all())
+
+    courses = Course.query.filter_by(author_id=id).all()
+
+    ids = []
+    mycor = MyCourses.query.filter_by(user_id=id).all()
+    for cor in mycor:
+        ids.append(cor.course_id)
+    print(ids)
+
+    finished = []
+    for a in ids:
+        b = Course.query.filter_by(id=a).first()
+        finished.append(b)
+
+    finish_len = len(finished)
+    print(finished)
 
     avatar_path = url_for("get_file", path=user.img_path) if user.img_path else url_for("get_file", path="static/images/default_avatar.jpg")
 
-    return render_template('profile.html', user=user, courses_cnt=courses, current_user=current_user, avatar_path=avatar_path)
+    return render_template('profile.html', user=user, courses_cnt=course_count, current_user=current_user, avatar_path=avatar_path, courses=courses, finished=finished, finish_len=finish_len)
 
 
 @app.route('/news', methods=['GET', 'POST'])
@@ -106,6 +122,7 @@ def news():
 @login_required
 def teaching():
     courses = Course.query.filter_by(author_id=current_user.id).all()
+    print(courses[0].name, courses[0])
     checks = []
     task_checks = TaskCheck.query.filter(TaskCheck.status.is_(None)).order_by(TaskCheck.date.desc()).all()
     for task in task_checks:

@@ -252,7 +252,27 @@ input[type='checkbox']:checked {
     color: #6c757d;
 }
 
-@media (max-width: 400px    ) {
+.parent-invite__wrapper {
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid grey;
+}
+
+.parent-invite__heading {
+    display: grid;
+    grid-template-columns: 2fr 3fr 1fr;
+    gap: 10px;
+}
+
+.Textinput {
+    width: 100%;
+}
+
+.parent-invite__input {
+    width: 100%
+}
+
+@media (max-width: 400px) {
     .btn {
         margin-top: 10px;
         background-color: white;

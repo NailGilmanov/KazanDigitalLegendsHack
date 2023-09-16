@@ -1,4 +1,5 @@
-{% extends 'base.html' %}
+  {% extends 'base.html' %}
+  {% from 'includes/course_thumbnail.html' import course_thumbnail with context %}
 {% block title %}Профиль{% endblock title %}
 {% block content %}
 <div class="w-profile mx-auto">
@@ -25,6 +26,22 @@
       </div>
     </div>
   </div>
+  <br><br>
+  <div class="parent-invite">
+    <div class="parent-invite__wrapper">
+      <div class="parent-invite__heading">
+        <b class="parent-invite__subtitle">Инвайт для родителя</b>
+        <span class="Textinput Textinput_size_l parent-invite__input">
+          <input aria-invalid="false" class="Textinput-Control" autocomplete="off" value="https://ya.cc/t/npOFRfpV4Skqms">
+          <span class="Textinput-Box"></span>
+        </span>
+        <button title="Скопировать" type="button" class="btn Button2 Button2_size_l Button2_theme_action Button2_view_lyceum parent-invite__control-button" autocomplete="off">
+          <span class="Button2-Text">Скопировать</span>
+        </button>
+      </div>
+      <p class="parent-invite__description">Скопируйте этот код и передайте родителю, чтобы он смог получить родительский доступ</p>
+    </div>
+  </div>
   {% if user.id == current_user.id %}
     <div class="row justify-content-between mt-5">
       <a href="{{ url_for('edit_profile', id=current_user.id) }}" class="btn w-45 profile-button">Изменить профиль</a>
@@ -48,12 +65,23 @@
 <div class="w-100 md-fullsize" style="margin-bottom: 7rem;">
   <div class="tab-content">
     <div class="tab-pane active" id="buttons-tabs-1" role="tabpanel">
-      <div class="mt-4 mx-auto" style="align-content: center; align-items: center; width: fit-content">
-        <div style="align-items: center">
-          <h3>Тут ничего нет</h3>
-          <p class="text-muted">Похоже, что пользователь не прошёл ни одного курса</p>
+      {% if finish_len == 0 %}
+        <div class="mt-4 mx-auto" style="align-content: center; align-items: center; width: fit-content">
+          <div style="align-items: center">
+            <h3>Тут ничего нет</h3>
+            <p class="text-muted">Похоже, что пользователь не прошел ни одного курса</p>
+          </div>
         </div>
-      </div>
+
+      {% else %}
+        {% for c in finished %}
+          <div class="col-6 mx-auto">
+            {{ course_thumbnail(c) }}
+          </div>
+        {% endfor %}
+
+      {% endif %}
+
     </div>
 
     <div class="tab-pane" id="buttons-tabs-2" role="tabpanel">
@@ -61,7 +89,7 @@
     </div>
 
     <div class="tab-pane" id="buttons-tabs-3" role="tabpanel">
-      {% if courses|length == 0 %}
+      {% if courses_cnt == 0 %}
         <div class="mt-4 mx-auto" style="align-content: center; align-items: center; width: fit-content">
           <div style="align-items: center">
             <h3>Тут ничего нет</h3>

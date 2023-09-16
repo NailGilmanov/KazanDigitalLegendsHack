@@ -252,3 +252,35 @@ input[type='checkbox']:checked {
     color: #6c757d;
 }
 
+@media (max-width: 400px    ) {
+    .btn {
+        margin-top: 10px;
+        background-color: white;
+        line-height: normal;
+    }
+
+    .me-2 {
+        margin-left: 13vw;
+    }
+
+    .navbar-brand {
+        margin-left: 21vw
+    }
+
+    .input-group-text {
+        width: 180px !important;
+    }
+
+    .col-md-6 {
+        margin-bottom: 20px;
+    }
+
+    .bi {
+        display: none;
+    }
+
+    .pe-5 {
+        margin-right: 300px !important;
+    }
+}
+

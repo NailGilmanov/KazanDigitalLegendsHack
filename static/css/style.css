@@ -103,6 +103,10 @@ html, body, .t-b {
 }
 
 @media (max-width: 992px) {
+    .profile-link {
+        border-radius: 0%;
+    }
+
     /* profile */
     .mt-profile {
         margin-top: 2rem !important;
@@ -272,7 +276,25 @@ input[type='checkbox']:checked {
     width: 100%
 }
 
-@media (max-width: 400px) {
+@media (max-width: 600px) {
+
+    .col-6 {
+        flex: 0 0 auto;
+        width: 100% !important;
+    }
+
+    .parent-invite__heading {
+        display: block;
+    }
+
+    .parent-invite__subtitle {
+        width: 100%
+    }
+
+    .w-50 {
+        width: 100% !important;
+    }
+
     .btn {
         margin-top: 10px;
         background-color: white;

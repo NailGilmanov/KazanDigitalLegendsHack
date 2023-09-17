@@ -97,7 +97,6 @@ def profile(id):
     mycor = MyCourses.query.filter_by(user_id=id).all()
     for cor in mycor:
         ids.append(cor.course_id)
-    print(ids)
 
     finished = []
     for a in ids:
@@ -105,11 +104,45 @@ def profile(id):
         finished.append(b)
 
     finish_len = len(finished)
-    print(finished)
+
+    res = {}
+    tasks = TaskCheck.query.filter_by(user_id=id).all()
+    finish_task = [i.page_id for i in tasks if i.status]
+    not_task = [i.page_id for i in tasks if i.status == 0]
+    print(finish_task, not_task)
+    finish_page = [Page.query.filter_by(id=id).all() for id in finish_task]
+    not_page = [Page.query.filter_by(id=id).all() for id in not_task]
+    print(finish_page, not_page)
+    finish_lesson = []
+    for a in finish_page:
+        c = []
+        for b in a:
+            c.append(Lesson.query.filter_by(id=b.lesson_id).all())
+        finish_lesson.append(c)
+    not_lesson = []
+    for a in not_page:
+        c = []
+        for b in a:
+            c.append(Lesson.query.filter_by(id=b.lesson_id).all())
+        not_lesson.append(c)
+    print(finish_lesson, not_lesson)
+    for lesson in finish_lesson:
+        for a in lesson:
+            res[a[0].course_id] = [0, 0]
+    for lesson in not_lesson:
+        for a in lesson:
+            res[a[0].course_id] = [0, 0]
+    for lesson in finish_lesson:
+        for a in lesson:
+            res[a[0].course_id][0] = len(a)
+    for lesson in not_lesson:
+        for a in lesson:
+            res[a[0].course_id][1] = len(a)
+    print(res)
 
     avatar_path = url_for("get_file", path=user.img_path) if user.img_path else url_for("get_file", path="static/images/default_avatar.jpg")
 
-    return render_template('profile.html', user=user, courses_cnt=course_count, current_user=current_user, avatar_path=avatar_path, courses=courses, finished=finished, finish_len=finish_len)
+    return render_template('profile.html', user=user, courses_cnt=course_count, current_user=current_user, avatar_path=avatar_path, courses=courses, finished=finished, finish_len=finish_len, res=res)
 
 
 @app.route('/news', methods=['GET', 'POST'])
@@ -122,7 +155,6 @@ def news():
 @login_required
 def teaching():
     courses = Course.query.filter_by(author_id=current_user.id).all()
-    print(courses[0].name, courses[0])
     checks = []
     task_checks = TaskCheck.query.filter(TaskCheck.status.is_(None)).order_by(TaskCheck.date.desc()).all()
     for task in task_checks:

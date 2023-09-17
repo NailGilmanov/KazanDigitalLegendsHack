@@ -15,9 +15,14 @@
             Имя пользователя: {{ user.username }}
           </span>
         </div>
-        <div class="row h5 mb-4">
+        <div class="row h5 mb-3">
           <span>
             Email: {{ user.email }}
+          </span>
+        </div>
+        <div class="row h5 mb-4">
+          <span>
+            Рейтинг: <span class="rate">0</span>
           </span>
         </div>
         <div class="row h5">
@@ -30,14 +35,15 @@
   <div class="parent-invite">
     <div class="parent-invite__wrapper">
       <div class="parent-invite__heading">
-        <b class="parent-invite__subtitle">Инвайт для родителя</b>
+        <b class="parent-invite__subtitle">Инвайт для родителя</b><br><br>
         <span class="Textinput Textinput_size_l parent-invite__input">
           <input aria-invalid="false" class="Textinput-Control" autocomplete="off" value="https://ya.cc/t/npOFRfpV4Skqms">
           <span class="Textinput-Box"></span>
-        </span>
+        </span><br>
         <button title="Скопировать" type="button" class="btn Button2 Button2_size_l Button2_theme_action Button2_view_lyceum parent-invite__control-button" autocomplete="off">
           <span class="Button2-Text">Скопировать</span>
         </button>
+        <br><br>
       </div>
       <p class="parent-invite__description">Скопируйте этот код и передайте родителю, чтобы он смог получить родительский доступ</p>
     </div>
@@ -50,12 +56,12 @@
   {% endif %}
   <div class="d-flex justify-content-center row mt-5"> <!-- buttons -->
     <ul class="nav sm-column w-100 pe-0" id="buttons" role="tablist">
-      <li class="nav-item active px-3 profile-link border w-50 text-center"
+      <li class="nav-item active px-3 profile-link border text-center"
           style="border-width: 0.1rem; border-radius: 50rem 0 0 50rem;">
         <a href="#buttons-tabs-1" class="fs-4 nav-link active" style="color: black;"
            aria-controls="buttons-tabs-1" role="tab" data-bs-toggle="tab">Обучение</a></li>
 
-      <li class="nav-item px-3 profile-link border w-50 text-center"
+      <li class="nav-item px-3 profile-link profile-link1 border text-center"
           style="border-width: 0.1rem; border-radius: 0rem 50rem 50rem 0rem;">
         <a href="#buttons-tabs-3" class="fs-4 nav-link" style="color: black;"
            aria-controls="buttons-tabs-3" role="tab" data-bs-toggle="tab">Созданные курсы</a></li>
@@ -75,9 +81,15 @@
 
       {% else %}
         {% for c in finished %}
+          {% if c.id in res %}
+            <h6 class="w-50" style="margin: 0 auto; color: green;">Выполнено верно: {{ res[c.id][0] }}</h6>
+            <h6 class="w-50" style="margin: 0 auto; color: red;">Выполнено с ошибками: {{ res[c.id][0] }}</h6>
+          {% endif %}
+
           <div class="col-6 mx-auto">
             {{ course_thumbnail(c) }}
           </div>
+      <br><br>
         {% endfor %}
 
       {% endif %}
@@ -112,5 +124,24 @@
 {% endblock content %}
 {% block script %}
 <script>
+  curloc = window.location.href;
+  document.querySelector(".Textinput-Control").value = curloc;
+
+
+  document.querySelector('.profile-link').style.borderRadius = '0%'
+  document.querySelector('.profile-link1').style.borderRadius = '0%'
+
+
+  document.querySelector(".Button2-Text").onclick = function() {
+    var text = document.querySelector(".Textinput-Control").value;
+
+    navigator.clipboard.writeText(text)
+    .then(() => {
+        console.log('Text copied to clipboard');
+    })
+    .catch(err => {
+        console.error('Error in copying text: ', err);
+    });
+}
 </script>
 {% endblock script %}

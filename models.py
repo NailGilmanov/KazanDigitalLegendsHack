@@ -82,7 +82,7 @@ class Lesson(db.Model):
     # course
 
     def __repr__(self):
-        return f'<Lesson {self.name} in {self.course.name}>'
+        return f'<Lesson>'
 
 
 class Page(db.Model):
@@ -94,8 +94,8 @@ class Page(db.Model):
 
     # lesson
 
-    def __repr__(self):
-        return f'<Page {self.name}; {self.lesson.name}; {self.lesson.course.name}>'
+    # def __repr__(self):
+    #     return f'<Page {self.name}; {self.lesson.name}; {self.lesson.course.name}>'
 
 
 class Post(db.Model):

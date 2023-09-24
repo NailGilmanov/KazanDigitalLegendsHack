@@ -4,7 +4,7 @@
 {% block content %}
 <div class="w-75 mx-auto mb-5">
   {% for c in courses %}
-    {% if c.id != 1 and c.id != 2 and c.id != 3 and c.id != 4 %}
+    {% if c.id != 1 and c.id != 2 and c.id != 3 and c.id != 4 and c.id != 6 and c.id != 7 %}
       {{ course_thumbnail(c) }}
     {% endif %}
   {% endfor %}
